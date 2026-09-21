@@ -1,0 +1,43 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Python application
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pyinstaller-windows-build:
+    runs-on: windows-latest
+    steps:
+      - name: Create Executable
+        uses: sayyid5416/pyinstaller@v1.8.0
+        with:
+          spec: "src/llm_proof/cli/main.py"
+          python_ver: "3.13.5"
+          pyinstaller_ver: "==6.20.0"
+          # spec: 'src/build.spec'
+          # requirements: 'src/requirements.txt'
+          upload_exe_with_name: "llm-proof-windows"
+          options: --onefile, --name "llm-proof"
+          # spec_options: # any custom arguments you want like: `--debug`
+          requirements: "requirements.txt"
+
+  pyinstaller-linux-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Executable
+        uses: sayyid5416/pyinstaller@v1.8.0
+        with:
+          spec: "src/llm_proof/cli/main.py"
+          python_ver: "3.13.5"
+          pyinstaller_ver: "==6.20.0"
+          # spec: 'src/build.spec'
+          # requirements: 'src/requirements.txt'
+          upload_exe_with_name: "llm-proof-linux"
+          options: --onefile, --name "llm-proof"
+          # spec_options: # any custom arguments you want like: `--debug`
+          requirements: "requirements.txt"
