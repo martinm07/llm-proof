@@ -1,3 +1,5 @@
+⚠ DISCLAIMER: This project (including the below README) was created using LLMs (specifically Qwen3.8 27B).
+
 # llm-proof
 
 Turn a plain PDF into a protected document: password-protected so naive LLM ingestion fails, and carrying canaries so unauthorised extraction can be identified.
