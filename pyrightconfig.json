@@ -1,0 +1,5 @@
+{
+  "typeCheckingMode": "basic",
+  "exclude": ["**/.scratch/**"],
+  "ignore": ["**/.scratch/**"],
+}

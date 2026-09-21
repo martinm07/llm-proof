@@ -1,0 +1,5 @@
+# Ruff configuration for llm-proof.
+
+# .scratch holds throwaway design-session scripts (cited as ADR-0005
+# evidence) that are excluded from analysis.
+exclude = [".scratch"]

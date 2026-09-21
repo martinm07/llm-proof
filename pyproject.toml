@@ -1,0 +1,23 @@
+[project]
+name = "llm-proof"
+version = "0.1.0"
+description = "Protect PDFs from naive LLM ingestion with content-derived passwords and canaries"
+requires-python = ">=3.13"
+dependencies = [
+    "PyMuPDF==1.28.2",
+]
+
+[project.scripts]
+llm-proof = "llm_proof.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/llm_proof"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]

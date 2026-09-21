@@ -1,0 +1,15 @@
+---
+
+canary 1
+
+---
+
+canary 2
+
+---
+
+lorem ipsum dolor sit amet
+
+---
+
+hello world!!!
