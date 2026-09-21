@@ -16,7 +16,7 @@ jobs:
       - name: Create Executable
         uses: sayyid5416/pyinstaller@v1.8.0
         with:
-          spec: "src/llm_proof/cli/main.py"
+          spec: "src/llm_proof/main.py"
           python_ver: "3.13.5"
           pyinstaller_ver: "==6.20.0"
           # spec: 'src/build.spec'
@@ -32,7 +32,7 @@ jobs:
       - name: Create Executable
         uses: sayyid5416/pyinstaller@v1.8.0
         with:
-          spec: "src/llm_proof/cli/main.py"
+          spec: "src/llm_proof/main.py"
           python_ver: "3.13.5"
           pyinstaller_ver: "==6.20.0"
           # spec: 'src/build.spec'
