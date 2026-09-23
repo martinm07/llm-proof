@@ -9,3 +9,5 @@ build
 dist
 main.spec
 _LOCAL_*
+test*.pdf
+!web/**/test*.pdf

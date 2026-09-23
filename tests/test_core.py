@@ -57,7 +57,7 @@ def test_protect_creates_encrypted_pdf(sample_pdf, tmp_path):
 def test_password_re_derivation_from_protected_file(sample_pdf, canary_spec, tmp_path):
     """The password should be re-derivable from the protected file + salt alone."""
     output = tmp_path / "protected.pdf"
-    result_path, inserted, password = protect_pdf(
+    result_path, inserted, password, _ = protect_pdf(
         str(sample_pdf), str(output), "test-salt", str(canary_spec)
     )
     assert inserted == 2
@@ -77,8 +77,8 @@ def test_determinism(sample_pdf, tmp_path):
     """Same plain document + same salt -> identical password and stable ID."""
     out1 = tmp_path / "p1.pdf"
     out2 = tmp_path / "p2.pdf"
-    _, _, pw1 = protect_pdf(str(sample_pdf), str(out1), "test-salt")
-    _, _, pw2 = protect_pdf(str(sample_pdf), str(out2), "test-salt")
+    _, _, pw1, _ = protect_pdf(str(sample_pdf), str(out1), "test-salt")
+    _, _, pw2, _ = protect_pdf(str(sample_pdf), str(out2), "test-salt")
     assert pw1 == pw2
 
     doc = fitz.open(str(sample_pdf))
@@ -104,7 +104,7 @@ def test_protect_xref_stream_input(tmp_path):
     assert b"/XRef" in TEST_PDF.read_bytes()
 
     out = tmp_path / "protected.pdf"
-    _, _, password = protect_pdf(str(TEST_PDF), str(out), "test-salt")
+    _, _, password, _ = protect_pdf(str(TEST_PDF), str(out), "test-salt")
 
     doc = fitz.open(str(out))
     assert doc.authenticate(password) != 0
@@ -126,9 +126,9 @@ def test_canary_independence(sample_pdf, tmp_path):
     out_b = tmp_path / "pb.pdf"
     out_none = tmp_path / "pnone.pdf"
 
-    _, _, pw_a = protect_pdf(str(sample_pdf), str(out_a), "test-salt", str(spec_a))
-    _, _, pw_b = protect_pdf(str(sample_pdf), str(out_b), "test-salt", str(spec_b))
-    _, _, pw_none = protect_pdf(str(sample_pdf), str(out_none), "test-salt")
+    _, _, pw_a, _ = protect_pdf(str(sample_pdf), str(out_a), "test-salt", str(spec_a))
+    _, _, pw_b, _ = protect_pdf(str(sample_pdf), str(out_b), "test-salt", str(spec_b))
+    _, _, pw_none, _ = protect_pdf(str(sample_pdf), str(out_none), "test-salt")
 
     assert pw_a == pw_b == pw_none
 

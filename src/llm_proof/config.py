@@ -76,3 +76,14 @@ def get_marker(flag_value: str | None = None) -> str:
         marker = MARKER_DEFAULT
     validate_marker(marker)
     return marker
+
+
+def get_url_template(flag_value: str | None = None) -> str | None:
+    if flag_value:
+        return flag_value
+
+    url_template = load_config(os.path.join(get_config_dir(), "config.toml")).get(
+        "url_template"
+    )
+
+    return url_template

@@ -13,7 +13,7 @@ def protect_pdf(
     salt: str,
     canaries_file: str | None = None,
     marker: str = MARKER_DEFAULT,
-) -> tuple[str, int, str]:
+) -> tuple[str, int, str, str]:
     """Protect a PDF: derive the seed from canonical content, carry it in the
     file ID, insert canaries, and apply the password.
 
@@ -77,7 +77,7 @@ def protect_pdf(
             owner_pw=password,
         )
 
-        return output_path, inserted, password
+        return output_path, inserted, password, seed
 
     finally:
         doc.close()

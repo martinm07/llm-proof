@@ -4,7 +4,7 @@ import argparse
 import os
 import sys
 
-from .config import get_config_dir, get_marker, get_salt
+from .config import get_config_dir, get_marker, get_salt, get_url_template
 from .password_cmd import get_password
 from .protect import protect_pdf
 
@@ -39,6 +39,10 @@ def main():
     protect_parser.add_argument(
         "--marker",
         help="Marker label written into the PDF's file ID (default: LLMPROOF; overrides config)",
+    )
+    protect_parser.add_argument(
+        "--url-template",
+        help="Template string for automatically generating and printing URLs using the PDF's seed value (substituting <SEED>) when calling `llm-proof protect`.",
     )
 
     # password subcommand
@@ -77,13 +81,18 @@ def main():
         output_path = args.output or default_output_name(input_path)
 
         try:
-            result_path, inserted, password = protect_pdf(
+            url_template = get_url_template(args.url_template)
+
+            result_path, inserted, password, seed = protect_pdf(
                 input_path, output_path, salt, args.canaries, marker=marker
             )
             print(f"Protected: {result_path}")
             if inserted > 0:
                 print(f"Canaries inserted: {inserted}")
             print("Password used: " + password)
+
+            if url_template:
+                print("\nGenerated URL: ", url_template.replace("<SEED>", seed))
         except ValueError as e:
             print(f"Error: {e}", file=sys.stderr)
             sys.exit(1)
