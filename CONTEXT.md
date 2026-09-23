@@ -24,6 +24,10 @@ _Avoid_: Text dump, extraction
 The per-document value derived from the canonical content, carried in the protected document and readable without the password. Mixed with the salt to yield the derived password; because the seed travels with the document, the salt is the only secret to keep.
 _Avoid_: Document identity, fingerprint, key, hint
 
+**File ID**:
+The PDF trailer's `/ID` entry: an array of two byte strings, carried unencrypted in the file. The clear-text carrier of the marked seed in a protected document; in other PDFs it holds values that are not seeds.
+_Avoid_: Document ID, fingerprint, file key
+
 **Marker**:
 The user-chosen label that prefixes the seed where it is carried in the protected document, so the seed can be recognised and distinguished from other file IDs. Held outside the document, like the salt; a document protected under one marker re-derives only under the same marker.
 _Avoid_: Signature, magic string, watermark

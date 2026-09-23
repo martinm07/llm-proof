@@ -1,0 +1,16 @@
+{
+  "name": "llm-proof-web",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Client-side extraction of the llm-proof seed from a PDF's /ID — no build step, test + editor wiring only",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}
