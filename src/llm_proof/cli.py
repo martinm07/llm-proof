@@ -124,13 +124,14 @@ def _read_canary_spec(args: argparse.Namespace) -> str | None:
             end = (
                 "End with Ctrl+Z followed by Enter."
                 if sys.platform == "win32"
-                else "End with Ctrl+D."
+                else "End with Enter followed by Ctrl+D."
             )
             print(
                 f"Enter canaries (one per ---separated block). {end}",
                 file=sys.stderr,
             )
         spec_text = sys.stdin.read()
+        print("\n")
         if not spec_text.strip():
             raise ValueError("no canaries provided via stdin")
         return spec_text

@@ -233,7 +233,4 @@ def perform_update(timeout: float = 30) -> str:
                 os.remove(temp_path)
             except OSError:
                 pass
-    return (
-        f"Updated llm-proof {current} -> {version}. "
-        "Restart llm-proof to use the new version."
-    )
+    return f"Updated llm-proof {current} -> {version}. "
