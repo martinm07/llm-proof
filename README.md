@@ -39,6 +39,28 @@ uv sync
 uv tool install .
 ```
 
+**Release binaries.** Single-file executables for Linux and Windows are published on [GitHub Releases](https://github.com/martinm07/llm-proof/releases) as `llm-proof-linux-x64` and `llm-proof-windows-x64`. Download the one for your platform and make it executable (`chmod +x llm-proof-linux-x64`). These builds can [update themselves](#updating).
+
+## Updating
+
+Release builds update themselves from GitHub Releases:
+
+```bash
+llm-proof update            # download and install the latest release
+llm-proof update --check    # only report whether a newer version exists
+llm-proof --version         # show the running version
+```
+
+`protect` also prints a one-line notice when a newer release is available:
+
+```
+Update available: 0.3.0 (currently running version 0.2.0). Run 'llm-proof update' to update.
+```
+
+The check runs at most once per hour and is silent when offline — it never delays or fails the command. The update takes effect on the next launch.
+
+If you installed from source or with `uv tool`, self-update is not available; update with `uv tool install --force llm-proof` instead.
+
 ## Usage
 
 ### Salt configuration

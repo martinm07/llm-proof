@@ -47,3 +47,23 @@ _Avoid_: Encrypted PDF, locked PDF
 **Plain document**:
 A PDF without a password; the input to `protect`.
 _Avoid_: Source PDF, input
+
+**Release**:
+A versioned publication of release artifacts on GitHub, identified by its semver tag.
+_Avoid_: Version, build, distribution
+
+**Release artifact**:
+A platform-specific executable published as a release asset, named for its platform and architecture.
+_Avoid_: Binary, package, build output
+
+**Self-update**:
+The installed executable replacing itself with a newer release artifact.
+_Avoid_: Auto-update, upgrade
+
+**Update check**:
+The query for the latest release performed when a command runs.
+_Avoid_: Version ping, health check
+
+**Update notice**:
+The message shown when a newer release is available than the running version.
+_Avoid_: Banner, alert, prompt

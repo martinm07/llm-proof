@@ -7,6 +7,36 @@ import sys
 from .config import get_config_dir, get_marker, get_salt, get_url_template
 from .password_cmd import get_password
 from .protect import protect_pdf
+from .update import check_for_update, notice_for, perform_update
+from .version import get_version
+
+
+def _run_update(args):
+    """Handle the `update` subcommand (perform, or `--check` report-only)."""
+    if args.check:
+        _, latest = check_for_update(get_config_dir(), force=True)
+        current = get_version()
+        if latest is None:
+            print(
+                "Error: could not determine the latest version (offline?).",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        notice = notice_for(current, latest)
+        if notice:
+            print(notice)
+        else:
+            print(f"Already up to date ({current}).")
+        return
+
+    try:
+        print(perform_update())
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:  # noqa: BLE001 -- top-level CLI catch-all
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 def default_output_name(input_path):
@@ -23,6 +53,9 @@ def default_output_name(input_path):
 def main():
     parser = argparse.ArgumentParser(
         prog="llm-proof", description="Protect PDFs from naive LLM ingestion"
+    )
+    parser.add_argument(
+        "--version", action="version", version=f"llm-proof {get_version()}"
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -56,7 +89,27 @@ def main():
         help="Marker label written into the PDF's file ID (default: LLMPROOF; overrides config)",
     )
 
+    # update subcommand
+    update_parser = subparsers.add_parser(
+        "update", help="Update llm-proof to the latest release"
+    )
+    update_parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Only report whether a newer version is available; do not download",
+    )
+
     args = parser.parse_args()
+
+    if args.command == "update":
+        _run_update(args)
+        return
+
+    # Auto update-check (TTL-cached, silent on failure); the notice is shown
+    # by `protect` only (ADR-0008).
+    notice = None
+    if args.command in ("protect", "password"):
+        notice = check_for_update(get_config_dir())[0]
 
     # Resolve salt
     salt = get_salt(args.salt)
@@ -93,6 +146,8 @@ def main():
 
             if url_template:
                 print("\nGenerated URL: ", url_template.replace("<SEED>", seed))
+            if notice:
+                print(notice)
         except ValueError as e:
             print(f"Error: {e}", file=sys.stderr)
             sys.exit(1)

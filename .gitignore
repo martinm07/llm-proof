@@ -8,6 +8,7 @@ build
 *.egg-info
 dist
 main.spec
+src/llm_proof/_version.py
 _LOCAL_*
 test*.pdf
 !web/**/test*.pdf

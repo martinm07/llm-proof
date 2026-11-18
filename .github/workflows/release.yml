@@ -1,0 +1,77 @@
+# Tag-triggered release pipeline: a `v*` tag push builds the single-file
+# executables for Linux and Windows and publishes them as a GitHub release.
+# See .scratch/self-update/spec.md (§3.9) and docs/adr/0007.
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            asset: llm-proof-linux-x64
+            exe: dist/llm-proof
+          - os: windows-latest
+            asset: llm-proof-windows-x64
+            exe: dist/llm-proof.exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        run: uv python install 3.13
+
+      - name: Resolve dependencies
+        run: uv sync --frozen
+
+      - name: Generate _version.py from tag
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          printf '__version__ = "%s"\n' "$VERSION" > src/llm_proof/_version.py
+
+      - name: Build executable
+        run: uv run --with pyinstaller==6.20.0 pyinstaller --onefile --name llm-proof src/llm_proof/main.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: ${{ matrix.exe }}
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Rename assets
+        run: |
+          mkdir -p out
+          cp "artifacts/llm-proof-linux-x64/llm-proof" "out/llm-proof-linux-x64"
+          cp "artifacts/llm-proof-windows-x64/llm-proof.exe" "out/llm-proof-windows-x64"
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: false
+          prerelease: false
+          generate_release_notes: false
+          files: |
+            out/llm-proof-linux-x64
+            out/llm-proof-windows-x64
