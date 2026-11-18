@@ -41,6 +41,8 @@ uv tool install .
 
 **Release binaries.** Single-file executables for Linux and Windows are published on [GitHub Releases](https://github.com/martinm07/llm-proof/releases) as `llm-proof-linux-x64` and `llm-proof-windows-x64`. Download the one for your platform and make it executable (`chmod +x llm-proof-linux-x64`). These builds can [update themselves](#updating).
 
+You can rename the binary (e.g. to `llm-proof`) and put it on your PATH — self-update replaces the running file in place, so it keeps whatever name you chose. Just make sure the directory it lives in is writable by your user (e.g. `~/.local/bin`), since the update writes a temporary file there.
+
 ## Updating
 
 Release builds update themselves from GitHub Releases:

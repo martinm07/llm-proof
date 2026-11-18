@@ -9,10 +9,13 @@ import json
 import os
 import platform
 import shutil
+import ssl
 import subprocess
 import sys
 import time
 import urllib.request
+
+import certifi
 
 from .version import get_version
 
@@ -63,14 +66,25 @@ def _release_version(release: dict | None) -> str | None:
     return tag.lstrip("v")
 
 
+def _ssl_context() -> ssl.SSLContext:
+    """TLS context with certifi's CA bundle layered on the system defaults.
+
+    Some Python builds (uv-managed interpreters, PyInstaller bundles) cannot
+    locate the system CA store; certifi's bundle keeps verification working
+    there (ADR-0007).
+    """
+    return ssl.create_default_context(cafile=certifi.where())
+
+
 def _fetch_latest_release(timeout: float = 5) -> dict | None:
     """Fetch the latest release from the GitHub API; None on any error."""
     request = urllib.request.Request(
         LATEST_URL,
         headers={"Accept": "application/vnd.github+json", "User-Agent": "llm-proof"},
     )
+    context = _ssl_context()
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as resp:
+        with urllib.request.urlopen(request, timeout=timeout, context=context) as resp:
             return json.load(resp)
     except Exception:  # noqa: BLE001 -- any failure is treated as "no data"
         return None
@@ -147,8 +161,9 @@ def check_for_update(
 def _download(url: str, dest: str, timeout: float) -> None:
     """Stream `url` to `dest`, overwriting any partial file."""
     request = urllib.request.Request(url, headers={"User-Agent": "llm-proof"})
+    context = _ssl_context()
     with (
-        urllib.request.urlopen(request, timeout=timeout) as resp,
+        urllib.request.urlopen(request, timeout=timeout, context=context) as resp,
         open(dest, "wb") as f,
     ):
         shutil.copyfileobj(resp, f)

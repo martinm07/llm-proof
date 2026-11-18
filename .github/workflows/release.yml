@@ -42,7 +42,7 @@ jobs:
           printf '__version__ = "%s"\n' "$VERSION" > src/llm_proof/_version.py
 
       - name: Build executable
-        run: uv run --with pyinstaller==6.20.0 pyinstaller --onefile --name llm-proof src/llm_proof/main.py
+        run: uv run --with pyinstaller==6.20.0 pyinstaller --onefile --name llm-proof --collect-all certifi src/llm_proof/main.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

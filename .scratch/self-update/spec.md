@@ -1,6 +1,6 @@
 # Spec: self-update for the llm-proof release build
 
-Status: ready-for-agent
+Status: done
 Design: agreed 2026-11-18 — see ADR-0007 (accepted), ADR-0008 (accepted)
 
 ## 1. Goal
@@ -45,6 +45,7 @@ Acceptance:
 7. **Swap**: Linux `os.replace` (atomic, in-process); Windows stages to `<exe>.new` and a delayed `move` helper swaps it in after the process exits.
 8. **Commands**: `update` (perform) and `update --check` (report-only).
 9. **Pipeline**: `v*` tag push → build linux + windows (uv, PyInstaller 6.20.0, `_version.py` injected from the tag) → create release (`softprops/action-gh-release`) → upload both assets. First release `v0.3.0`.
+10. **CA store**: TLS verification is pinned to `certifi` (data-only runtime dependency, added in 0.3.1) because some Python builds — uv-managed interpreters, PyInstaller bundles — cannot locate the system CA store. See ADR-0007.
 
 ## 4. Files
 

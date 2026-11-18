@@ -135,6 +135,17 @@ def test_check_no_notice_when_current_is_newer(tmp_path, monkeypatch):
     assert notice is None
 
 
+# --- _ssl_context ---------------------------------------------------------
+
+
+def test_ssl_context_requires_certs_and_loads_bundle():
+    import ssl
+
+    ctx = update._ssl_context()
+    assert ctx.verify_mode == ssl.CERT_REQUIRED
+    assert ctx.get_ca_certs()
+
+
 # --- perform_update -------------------------------------------------------
 
 
