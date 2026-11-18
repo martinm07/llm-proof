@@ -50,7 +50,7 @@ def default_output_name(input_path):
     return candidate
 
 
-def main():
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="llm-proof", description="Protect PDFs from naive LLM ingestion"
     )
@@ -64,7 +64,17 @@ def main():
         "protect", help="Protect a PDF with a derived password and canaries"
     )
     protect_parser.add_argument("input", help="Input PDF path")
-    protect_parser.add_argument("--canaries", "-c", help="Path to canary spec file")
+    canary_group = protect_parser.add_mutually_exclusive_group()
+    canary_group.add_argument(
+        "--canaries",
+        "-c",
+        action="store_true",
+        help="Read the canary spec from stdin (interactive entry)",
+    )
+    canary_group.add_argument(
+        "--canaries-file",
+        help="Path to canary spec file",
+    )
     protect_parser.add_argument(
         "--output", "-o", help="Output PDF path (default: <input>.protected.pdf)"
     )
@@ -96,9 +106,44 @@ def main():
     update_parser.add_argument(
         "--check",
         action="store_true",
-        help="Only report whether a newer version is available; do not download",
+        help="Only report whether a newer release is available; do not download",
     )
 
+    return parser
+
+
+def _read_canary_spec(args: argparse.Namespace) -> str | None:
+    """Acquire the canary spec text for `protect`.
+
+    `--canaries` reads the spec from stdin, printing an entry instruction
+    first when stdin is an interactive terminal; `--canaries-file` reads a
+    canary spec file. Returns None when no canaries are requested.
+    """
+    if args.canaries:
+        if sys.stdin.isatty():
+            end = (
+                "End with Ctrl+Z followed by Enter."
+                if sys.platform == "win32"
+                else "End with Ctrl+D."
+            )
+            print(
+                f"Enter canaries (one per ---separated block). {end}",
+                file=sys.stderr,
+            )
+        spec_text = sys.stdin.read()
+        if not spec_text.strip():
+            raise ValueError("no canaries provided via stdin")
+        return spec_text
+
+    if args.canaries_file:
+        with open(args.canaries_file, "r") as f:
+            return f.read()
+
+    return None
+
+
+def main():
+    parser = build_parser()
     args = parser.parse_args()
 
     if args.command == "update":
@@ -135,9 +180,10 @@ def main():
 
         try:
             url_template = get_url_template(args.url_template)
+            spec_text = _read_canary_spec(args)
 
             result_path, inserted, password, seed = protect_pdf(
-                input_path, output_path, salt, args.canaries, marker=marker
+                input_path, output_path, salt, spec_text, marker=marker
             )
             print(f"Protected: {result_path}")
             if inserted > 0:

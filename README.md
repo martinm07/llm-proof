@@ -101,10 +101,16 @@ Like the salt, the marker is held by the user and never stored by llm-proof: a f
 llm-proof protect input.pdf -o output.pdf
 ```
 
-With canaries:
+With canaries from a canary spec file:
 
 ```bash
-llm-proof protect input.pdf --canaries canaries.txt -o output.pdf
+llm-proof protect input.pdf --canaries-file canaries.txt -o output.pdf
+```
+
+Or enter canaries at the prompt: `--canaries` reads the canary spec from stdin (finish with `Ctrl+D` on Linux/macOS, `Ctrl+Z` then `Enter` on Windows):
+
+```bash
+llm-proof protect input.pdf --canaries
 ```
 
 If `-o` is omitted, the output is written to `<input-stem>.protected.pdf` (with an incremental suffix if that already exists).
@@ -147,8 +153,11 @@ llm-proof does not verify the password it derives: a wrong salt or marker simply
 # Protect without canaries (password only)
 llm-proof protect report.pdf -o report-protected.pdf
 
-# Protect with canaries
-llm-proof protect report.pdf --canaries recipient-canaries.txt -o report-protected.pdf
+# Protect with canaries from a canary spec file
+llm-proof protect report.pdf --canaries-file recipient-canaries.txt -o report-protected.pdf
+
+# Protect with canaries entered at the prompt
+llm-proof protect report.pdf --canaries
 
 # Re-derive the password from the protected file
 llm-proof password report-protected.pdf

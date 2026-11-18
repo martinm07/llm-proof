@@ -11,7 +11,7 @@ def protect_pdf(
     input_path: str,
     output_path: str,
     salt: str,
-    canaries_file: str | None = None,
+    canaries: str | None = None,
     marker: str = MARKER_DEFAULT,
 ) -> tuple[str, int, str, str]:
     """Protect a PDF: derive the seed from canonical content, carry it in the
@@ -19,6 +19,9 @@ def protect_pdf(
 
     Canaries never contribute to the password; the seed is computed from the
     plain document before canary insertion.
+
+    ``canaries`` is the canary spec text; acquiring it (file, stdin) is the
+    caller's concern.
 
     Returns (output_path, inserted_count, password).
     """
@@ -62,12 +65,8 @@ def protect_pdf(
 
         # Insert canaries
         inserted = 0
-        if canaries_file:
-            with open(canaries_file, "r") as f:
-                spec_text = f.read()
-
-            canaries = parse_canary_spec(spec_text)
-            inserted = insert_all_canaries(doc, canaries)
+        if canaries:
+            inserted = insert_all_canaries(doc, parse_canary_spec(canaries))
 
         # Save with password protection
         doc.save(

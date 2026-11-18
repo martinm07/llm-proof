@@ -9,7 +9,11 @@ Invisibly embedded text planted in a protected document, which identifies who or
 _Avoid_: Watermark, trap, breadcrumb, honeytrap
 
 **Canary spec**:
-The user-written file of canaries, one per `---`-separated block, where a separator may carry a placement directive for its canary.
+The user-written text of canaries, one per `---`-separated block, where a separator may carry a placement directive for its canary.
+_Avoid_: Trap list
+
+**Canary spec file**:
+A file carrying a canary spec, read by `--canaries-file`.
 _Avoid_: Canary file, trap list
 
 **Placement directive**:

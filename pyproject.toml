@@ -1,6 +1,6 @@
 [project]
 name = "llm-proof"
-version = "0.3.1"
+version = "0.4.0"
 description = "Protect PDFs from naive LLM ingestion with content-derived passwords and canaries"
 requires-python = ">=3.13"
 dependencies = ["PyMuPDF==1.28.2", "certifi>=2025.1.16"]

@@ -1,13 +1,16 @@
 """Tests for llm-proof core functionality."""
 
 import hashlib
+import io
 import re
+import sys
 from pathlib import Path
 
 import pymupdf as fitz
 import pytest
 
 from llm_proof.canaries import insert_all_canaries, parse_canary_spec
+from llm_proof.cli import _read_canary_spec, build_parser
 from llm_proof.password_cmd import get_password
 from llm_proof.protect import protect_pdf
 from llm_proof.seed import (
@@ -36,14 +39,6 @@ def sample_pdf(tmp_path):
 TEST_PDF = Path(__file__).parent.parent / "test.pdf"
 
 
-@pytest.fixture
-def canary_spec(tmp_path):
-    """Create a canary spec file."""
-    path = tmp_path / "canaries.txt"
-    path.write_text("Canary A.\n---\nCanary B.\n")
-    return path
-
-
 def test_protect_creates_encrypted_pdf(sample_pdf, tmp_path):
     """Protection should produce an encrypted PDF."""
     output = tmp_path / "protected.pdf"
@@ -54,21 +49,21 @@ def test_protect_creates_encrypted_pdf(sample_pdf, tmp_path):
     doc.close()
 
 
-def test_password_re_derivation_from_protected_file(sample_pdf, canary_spec, tmp_path):
+def test_password_re_derivation_from_protected_file(sample_pdf, tmp_path):
     """The password should be re-derivable from the protected file + salt alone."""
     output = tmp_path / "protected.pdf"
     result_path, inserted, password, _ = protect_pdf(
-        str(sample_pdf), str(output), "test-salt", str(canary_spec)
+        str(sample_pdf), str(output), "test-salt", "Canary A.\n---\nCanary B.\n"
     )
     assert inserted == 2
 
-    re_derived = get_password(str(result_path), "test-salt")
+    re_derived = get_password(result_path, "test-salt")
     assert re_derived == password
     assert len(re_derived) == 24
     assert all(c in "0123456789abcdef" for c in re_derived)
 
     # Verify authentication works
-    doc = fitz.open(str(result_path))
+    doc = fitz.open(result_path)
     assert doc.authenticate(password) != 0
     doc.close()
 
@@ -117,18 +112,15 @@ def test_protect_xref_stream_input(tmp_path):
 
 def test_canary_independence(sample_pdf, tmp_path):
     """Canaries never contribute to the password; they stay extractable."""
-    spec_a = tmp_path / "a.txt"
-    spec_a.write_text("Alpha canary.\n---\nBeta canary.\n")
-    spec_b = tmp_path / "b.txt"
-    spec_b.write_text("Gamma canary.\n")
-
     out_a = tmp_path / "pa.pdf"
     out_b = tmp_path / "pb.pdf"
     out_none = tmp_path / "pnone.pdf"
 
-    _, _, pw_a, _ = protect_pdf(str(sample_pdf), str(out_a), "test-salt", str(spec_a))
-    _, _, pw_b, _ = protect_pdf(str(sample_pdf), str(out_b), "test-salt", str(spec_b))
-    _, _, pw_none, _ = protect_pdf(str(sample_pdf), str(out_none), "test-salt")
+    _, _, pw_a, _ = protect_pdf(
+        str(sample_pdf), out_a, "test-salt", "Alpha canary.\n---\nBeta canary.\n"
+    )
+    _, _, pw_b, _ = protect_pdf(str(sample_pdf), out_b, "test-salt", "Gamma canary.\n")
+    _, _, pw_none, _ = protect_pdf(str(sample_pdf), out_none, "test-salt")
 
     assert pw_a == pw_b == pw_none
 
@@ -267,6 +259,97 @@ def test_canary_placement_directive(sample_pdf, tmp_path):
     canonical = extract_canonical_content(doc)
     assert "Targeted canary." in canonical
     doc.close()
+
+
+class _TtyStdin(io.StringIO):
+    """A stdin double that reports itself as an interactive terminal."""
+
+    def isatty(self) -> bool:
+        return True
+
+
+def test_parser_canaries_flag():
+    """--canaries / -c is value-less and selects interactive stdin entry."""
+    parser = build_parser()
+    args = parser.parse_args(["protect", "in.pdf", "--canaries"])
+    assert args.canaries is True
+    assert args.canaries_file is None
+
+    args = parser.parse_args(["protect", "in.pdf", "-c"])
+    assert args.canaries is True
+    assert args.canaries_file is None
+
+
+def test_parser_canaries_file():
+    """--canaries-file takes a path to a canary spec file."""
+    parser = build_parser()
+    args = parser.parse_args(["protect", "in.pdf", "--canaries-file", "spec.txt"])
+    assert args.canaries is False
+    assert args.canaries_file == "spec.txt"
+
+
+def test_parser_canaries_conflict():
+    """Combining --canaries and --canaries-file is a hard error."""
+    parser = build_parser()
+    with pytest.raises(SystemExit):
+        parser.parse_args(
+            ["protect", "in.pdf", "--canaries", "--canaries-file", "spec.txt"]
+        )
+
+
+def test_read_canary_spec_from_stdin(monkeypatch, capsys):
+    """--canaries reads the spec from stdin; piped stdin gets no instruction."""
+    monkeypatch.setattr(sys, "stdin", io.StringIO("Canary A.\n---\nCanary B.\n"))
+    args = build_parser().parse_args(["protect", "in.pdf", "--canaries"])
+
+    assert _read_canary_spec(args) == "Canary A.\n---\nCanary B.\n"
+    assert capsys.readouterr().err == ""
+
+
+def test_read_canary_spec_instruction_linux(monkeypatch, capsys):
+    """Interactive stdin gets the Ctrl+D instruction on non-Windows platforms."""
+    monkeypatch.setattr(sys, "platform", "linux")
+    monkeypatch.setattr(sys, "stdin", _TtyStdin("Canary A.\n"))
+    args = build_parser().parse_args(["protect", "in.pdf", "--canaries"])
+
+    _read_canary_spec(args)
+    assert "Ctrl+D" in capsys.readouterr().err
+
+
+def test_read_canary_spec_instruction_windows(monkeypatch, capsys):
+    """Interactive stdin gets the Ctrl+Z + Enter instruction on Windows."""
+    monkeypatch.setattr(sys, "platform", "win32")
+    monkeypatch.setattr(sys, "stdin", _TtyStdin("Canary A.\n"))
+    args = build_parser().parse_args(["protect", "in.pdf", "--canaries"])
+
+    _read_canary_spec(args)
+    assert "Ctrl+Z" in capsys.readouterr().err
+
+
+def test_read_canary_spec_empty_stdin(monkeypatch):
+    """An empty or whitespace-only stdin spec is a hard error."""
+    args = build_parser().parse_args(["protect", "in.pdf", "--canaries"])
+    for text in ("", "  \n \n"):
+        monkeypatch.setattr(sys, "stdin", io.StringIO(text))
+        with pytest.raises(ValueError, match="no canaries provided via stdin"):
+            _read_canary_spec(args)
+
+
+def test_read_canary_spec_from_file(tmp_path):
+    """--canaries-file reads the canary spec file."""
+    spec = tmp_path / "spec.txt"
+    spec.write_text("Canary A.\n---\nCanary B.\n")
+    args = build_parser().parse_args(
+        ["protect", "in.pdf", "--canaries-file", str(spec)]
+    )
+
+    assert _read_canary_spec(args) == "Canary A.\n---\nCanary B.\n"
+
+
+def test_read_canary_spec_none():
+    """No canary source means no canaries."""
+    args = build_parser().parse_args(["protect", "in.pdf"])
+    assert _read_canary_spec(args) is None
 
 
 def test_free_text_annotation_exclusion(tmp_path):
