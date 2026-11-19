@@ -16,8 +16,12 @@ _Avoid_: Trap list
 A file carrying a canary spec, read by `--canaries-file`.
 _Avoid_: Canary file, trap list
 
+**Placement mode**:
+How a canary is anchored on its page: text-anchored (after a word of the page's text) or geometric (at the top, centre, or bottom of the page).
+_Avoid_: Insertion mode, position
+
 **Placement directive**:
-An optional key on a canary spec separator (e.g. `page: 7`) controlling where a canary is embedded in the document.
+An optional key on a canary spec separator (e.g. `page: 7, centre`) controlling where a canary is embedded in the document: which page, and its placement mode on that page.
 _Avoid_: Locator, target
 
 **Canonical content**:

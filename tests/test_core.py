@@ -243,11 +243,11 @@ def test_canary_spec_parsing():
 
     assert len(canaries) == 3
     assert canaries[0][0] == "First canary."
-    assert canaries[0][1] is None  # No placement
+    assert canaries[0][1] == {}  # No placement
     assert canaries[1][0] == "Second canary."
     assert canaries[1][1] == {"page": 5}
     assert canaries[2][0] == "Third canary."
-    assert canaries[2][1] is None  # No placement
+    assert canaries[2][1] == {}  # No placement
 
 
 def test_canary_placement_directive(sample_pdf, tmp_path):

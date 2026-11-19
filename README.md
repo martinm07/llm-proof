@@ -117,22 +117,32 @@ If `-o` is omitted, the output is written to `<input-stem>.protected.pdf` (with 
 
 ### Canary spec format
 
-The canary spec file uses `---` separators between canary blocks. Directives go on the separator line **before** the canary they apply to (front-matter style):
+The canary spec file uses `---` separators between canary blocks. Directives go on the separator line **before** the canary they apply to (front-matter style), comma-separated:
 
 ```
 Default canary goes to round-robin.
 --- page: 7
 This canary goes specifically to page 7.
+--- page: 2, top
+This canary goes to the top of page 2.
 ---
 Back to round-robin for this one.
 ```
 
 **Placement options:**
 
-- No directive: canary is round-robined across pages starting from page 1
-- `page: N`: canary is placed on page N (1-indexed)
+Two independent directives:
 
-Canaries are inserted as invisible white text at sentence/paragraph boundaries, evenly distributed across the page.
+- `page: N` — canary is placed on page N (1-indexed). Without it, canaries are round-robined across pages starting from page 1.
+- A **placement mode** — where on the page the canary is anchored:
+  - `after-text` — inserted after a word of the page's text. Skipped when the page has no text.
+  - `top`, `centre`, `bottom` — inserted at that position of the page. Always inserted, even on pages with no text.
+
+Placement modes are matched case-insensitively by prefix: `c`, `cen`, `center` and `CENTRE` all mean `centre`, `t` means `top`, and so on. An unrecognised directive is ignored with a warning.
+
+**The first canary** defaults to `centre` placement: it is the canary you have thought through most, and it is embedded even in text-poor PDFs, where `after-text` canaries are dropped (pages without text are common). Give it an explicit mode, e.g. `--- after-text`, to override.
+
+Canaries are inserted as invisible white text (12pt). In geometric placement a canary is capped at 3 lines; longer canaries are truncated with a warning.
 
 ### Re-deriving the password
 

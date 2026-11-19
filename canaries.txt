@@ -2,7 +2,7 @@
 
 canary 1
 
----
+--- page: 2, top
 
 canary 2
 
